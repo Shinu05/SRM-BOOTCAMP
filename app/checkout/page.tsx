@@ -7,7 +7,19 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useCart } from '@/contexts/CartContext';
-import { AlertCircle, ShoppingBag, ArrowRight } from 'lucide-react';
+import {
+  AlertCircle,
+  ShoppingBag,
+  ArrowRight,
+  Loader2,
+  RotateCcw,
+} from 'lucide-react';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface FormErrors {
   name?: string;
@@ -30,8 +42,19 @@ export default function CheckoutPage() {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [loadingState, setLoadingState] = useState<'idle' | 'creating' | 'popup_loading' | 'verifying'>('idle');
+  const [createdOrderDetails, setCreatedOrderDetails] = useState<{
+    order_id: string;
+    razorpay_order_id: string;
+    amount: number;
+    currency: string;
+    key_id: string;
+  } | null>(null);
+
+  const [paymentStatusMessage, setPaymentStatusMessage] = useState<{
+    type: 'error' | 'warning' | 'success';
+    text: string;
+  } | null>(null);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -46,26 +69,177 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Helper to load Razorpay Checkout SDK dynamically
+  const loadRazorpaySDK = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // Open Razorpay Popup for an order
+  const openRazorpayPopup = async (
+    order_id: string,
+    razorpay_order_id: string,
+    amount: number,
+    currency: string,
+    key_id: string
+  ) => {
+    setLoadingState('popup_loading');
+    const isLoaded = await loadRazorpaySDK();
+
+    if (!isLoaded) {
+      setPaymentStatusMessage({
+        type: 'error',
+        text: 'Failed to load Razorpay payment gateway. Please check your network and try again.',
+      });
+      setLoadingState('idle');
+      return;
+    }
+
+    const options = {
+      key: key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_TJm53kBvVvtlPW',
+      amount: amount,
+      currency: currency || 'INR',
+      name: 'Store',
+      description: 'Order Payment',
+      order_id: razorpay_order_id,
+      handler: async function (response: any) {
+        await handlePaymentSuccess(
+          response.razorpay_order_id,
+          response.razorpay_payment_id,
+          response.razorpay_signature,
+          order_id
+        );
+      },
+      modal: {
+        ondismiss: async function () {
+          await handlePaymentDismissed(order_id);
+        },
+      },
+      prefill: {
+        name: formData.name,
+        email: currentUser?.email || '',
+        contact: formData.phone,
+      },
+      theme: {
+        color: '#4f46e5',
+      },
+    };
+
+    setLoadingState('idle');
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
+  // Handle successful payment verification
+  const handlePaymentSuccess = async (
+    razorpay_order_id: string,
+    razorpay_payment_id: string,
+    razorpay_signature: string,
+    order_id: string
+  ) => {
+    setLoadingState('verifying');
+    setPaymentStatusMessage(null);
+
+    try {
+      const res = await fetch('/api/verify-razorpay-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          razorpay_order_id,
+          razorpay_payment_id,
+          razorpay_signature,
+          order_id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        router.push(`/order-confirmation/${order_id}`);
+      } else {
+        setPaymentStatusMessage({
+          type: 'error',
+          text: data.error || 'Payment verification failed. Please try again.',
+        });
+        setLoadingState('idle');
+      }
+    } catch (err) {
+      setPaymentStatusMessage({
+        type: 'error',
+        text: 'An error occurred while verifying your payment. Please try again.',
+      });
+      setLoadingState('idle');
+    }
+  };
+
+  // Handle popup dismiss or payment incomplete
+  const handlePaymentDismissed = async (order_id: string) => {
+    try {
+      const res = await fetch(`/api/order-status/${order_id}`);
+      if (res.ok) {
+        const statusData = await res.json();
+        if (statusData.status === 'paid') {
+          router.push(`/order-confirmation/${order_id}`);
+          return;
+        }
+      }
+    } catch (e) {}
+
+    setPaymentStatusMessage({
+      type: 'warning',
+      text: 'Payment was not completed. You can try again.',
+    });
+    setLoadingState('idle');
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSubmitError(null);
+    setPaymentStatusMessage(null);
 
     if (!validateForm()) return;
 
     if (!currentUser) {
-      setSubmitError('Please sign in to complete your checkout.');
+      setPaymentStatusMessage({
+        type: 'error',
+        text: 'Please sign in to complete your checkout.',
+      });
       return;
     }
 
-    if (cartItems.length === 0) {
-      setSubmitError('Your cart is empty.');
+    if (cartItems.length === 0 && !createdOrderDetails) {
+      setPaymentStatusMessage({
+        type: 'error',
+        text: 'Your cart is empty.',
+      });
       return;
     }
 
-    setSubmitting(true);
+    if (createdOrderDetails) {
+      await openRazorpayPopup(
+        createdOrderDetails.order_id,
+        createdOrderDetails.razorpay_order_id,
+        createdOrderDetails.amount,
+        createdOrderDetails.currency,
+        createdOrderDetails.key_id
+      );
+      return;
+    }
+
+    setLoadingState('creating');
 
     try {
-      const res = await fetch('/api/orders', {
+      // 1. Create Supabase order
+      const orderRes = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -80,17 +254,76 @@ export default function CheckoutPage() {
         }),
       });
 
-      const data = await res.json();
+      const orderData = await orderRes.json();
 
-      if (res.ok && data.order_id) {
-        router.push(`/order-confirmation/${data.order_id}`);
-      } else {
-        setSubmitError(data.error || 'Failed to place order. Please try again.');
+      if (!orderRes.ok || !orderData.order_id) {
+        setPaymentStatusMessage({
+          type: 'error',
+          text: orderData.error || 'Failed to create order. Please try again.',
+        });
+        setLoadingState('idle');
+        return;
       }
+
+      const internalOrderId = orderData.order_id;
+
+      // 2. Create Razorpay Order
+      const rzpRes = await fetch('/api/create-razorpay-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_id: internalOrderId,
+          total_amount: subtotal,
+        }),
+      });
+
+      const rzpData = await rzpRes.json();
+
+      if (!rzpRes.ok || !rzpData.razorpay_order_id) {
+        setPaymentStatusMessage({
+          type: 'error',
+          text: rzpData.error || 'Failed to initialize Razorpay payment.',
+        });
+        setLoadingState('idle');
+        return;
+      }
+
+      const orderDetails = {
+        order_id: internalOrderId,
+        razorpay_order_id: rzpData.razorpay_order_id,
+        amount: rzpData.amount,
+        currency: rzpData.currency,
+        key_id: rzpData.key_id,
+      };
+
+      setCreatedOrderDetails(orderDetails);
+
+      // 3. Open Razorpay Popup
+      await openRazorpayPopup(
+        orderDetails.order_id,
+        orderDetails.razorpay_order_id,
+        orderDetails.amount,
+        orderDetails.currency,
+        orderDetails.key_id
+      );
     } catch (err) {
-      setSubmitError('An unexpected error occurred. Please try again.');
-    } finally {
-      setSubmitting(false);
+      setPaymentStatusMessage({
+        type: 'error',
+        text: 'An unexpected error occurred. Please try again.',
+      });
+      setLoadingState('idle');
+    }
+  };
+
+  const handleRetryPayment = async () => {
+    if (createdOrderDetails) {
+      await openRazorpayPopup(
+        createdOrderDetails.order_id,
+        createdOrderDetails.razorpay_order_id,
+        createdOrderDetails.amount,
+        createdOrderDetails.currency,
+        createdOrderDetails.key_id
+      );
     }
   };
 
@@ -103,7 +336,7 @@ export default function CheckoutPage() {
           Checkout
         </h1>
 
-        {cartItems.length === 0 ? (
+        {cartItems.length === 0 && !createdOrderDetails ? (
           <div className="flex flex-col items-center justify-center py-16 bg-surface border border-border rounded-2xl text-center p-6">
             <ShoppingBag className="w-12 h-12 text-muted mb-4 opacity-50" />
             <h2 className="text-xl font-bold text-foreground">Your cart is empty</h2>
@@ -123,10 +356,46 @@ export default function CheckoutPage() {
                 Shipping Details
               </h2>
 
-              {submitError && (
-                <div className="mb-6 p-4 rounded-xl bg-error/10 border border-error/20 text-error flex items-center gap-3 text-sm">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <span>{submitError}</span>
+              {/* Status & Feedback Messages */}
+              {paymentStatusMessage && (
+                <div
+                  className={`mb-6 p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm ${
+                    paymentStatusMessage.type === 'error'
+                      ? 'bg-error/10 border-error/20 text-error'
+                      : paymentStatusMessage.type === 'warning'
+                      ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                      : 'bg-success/10 border-success/20 text-success'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <span>{paymentStatusMessage.text}</span>
+                  </div>
+
+                  {createdOrderDetails && (
+                    <button
+                      type="button"
+                      onClick={handleRetryPayment}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity w-fit"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Try Again</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Loading Spinner State */}
+              {loadingState !== 'idle' && (
+                <div className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center gap-3 text-sm">
+                  <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
+                  <span>
+                    {loadingState === 'creating'
+                      ? 'Preparing order details...'
+                      : loadingState === 'popup_loading'
+                      ? 'Opening Razorpay Payment Gateway...'
+                      : 'Verifying payment status...'}
+                  </span>
                 </div>
               )}
 
@@ -138,12 +407,13 @@ export default function CheckoutPage() {
                   </label>
                   <input
                     type="text"
+                    disabled={Boolean(createdOrderDetails)}
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Jane Doe"
                     className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                       errors.name ? 'border-error' : 'border-border'
-                    }`}
+                    } ${createdOrderDetails ? 'opacity-70 cursor-not-allowed' : ''}`}
                   />
                   {errors.name && (
                     <p className="mt-1.5 text-xs text-error flex items-center gap-1">
@@ -160,12 +430,13 @@ export default function CheckoutPage() {
                   </label>
                   <input
                     type="text"
+                    disabled={Boolean(createdOrderDetails)}
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder="123 Commerce St, Suite 400"
                     className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                       errors.address ? 'border-error' : 'border-border'
-                    }`}
+                    } ${createdOrderDetails ? 'opacity-70 cursor-not-allowed' : ''}`}
                   />
                   {errors.address && (
                     <p className="mt-1.5 text-xs text-error flex items-center gap-1">
@@ -183,12 +454,13 @@ export default function CheckoutPage() {
                     </label>
                     <input
                       type="text"
+                      disabled={Boolean(createdOrderDetails)}
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                       placeholder="New York"
                       className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                         errors.city ? 'border-error' : 'border-border'
-                      }`}
+                      } ${createdOrderDetails ? 'opacity-70 cursor-not-allowed' : ''}`}
                     />
                     {errors.city && (
                       <p className="mt-1.5 text-xs text-error flex items-center gap-1">
@@ -204,12 +476,13 @@ export default function CheckoutPage() {
                     </label>
                     <input
                       type="text"
+                      disabled={Boolean(createdOrderDetails)}
                       value={formData.postalCode}
                       onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
                       placeholder="10001"
                       className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                         errors.postalCode ? 'border-error' : 'border-border'
-                      }`}
+                      } ${createdOrderDetails ? 'opacity-70 cursor-not-allowed' : ''}`}
                     />
                     {errors.postalCode && (
                       <p className="mt-1.5 text-xs text-error flex items-center gap-1">
@@ -227,12 +500,13 @@ export default function CheckoutPage() {
                   </label>
                   <input
                     type="tel"
+                    disabled={Boolean(createdOrderDetails)}
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+1 (555) 000-0000"
                     className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                       errors.phone ? 'border-error' : 'border-border'
-                    }`}
+                    } ${createdOrderDetails ? 'opacity-70 cursor-not-allowed' : ''}`}
                   />
                   {errors.phone && (
                     <p className="mt-1.5 text-xs text-error flex items-center gap-1">
@@ -244,11 +518,25 @@ export default function CheckoutPage() {
 
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={loadingState !== 'idle'}
                   className="mt-4 w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-primary text-primary-foreground font-semibold text-base shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  <span>{submitting ? 'Placing Order...' : 'Place Order'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  {loadingState !== 'idle' ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : createdOrderDetails ? (
+                    <>
+                      <RotateCcw className="w-5 h-5" />
+                      <span>Reopen Razorpay Payment</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Pay Now with Razorpay</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </form>
             </div>
