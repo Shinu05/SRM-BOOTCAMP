@@ -18,7 +18,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Safely verify if Firebase credentials are populated
+// Safely verify if valid Firebase credentials exist
 const isConfigured = Boolean(
   firebaseConfig.apiKey &&
     firebaseConfig.apiKey.trim() !== '' &&
@@ -34,6 +34,8 @@ if (isConfigured) {
     auth = getAuth(app);
   } catch (error) {
     console.warn('Firebase initialization skipped or failed:', error);
+    app = null;
+    auth = null;
   }
 }
 
@@ -42,7 +44,7 @@ const googleProvider = new GoogleAuthProvider();
 export const signInWithGoogle = async () => {
   if (!auth) {
     alert(
-      'Firebase Authentication is not configured yet.\nPlease set NEXT_PUBLIC_FIREBASE_API_KEY and credentials in .env.local'
+      'Firebase Authentication is not fully configured.\nPlease verify NEXT_PUBLIC_FIREBASE_API_KEY in .env.local'
     );
     throw new Error('Firebase Auth not configured');
   }
@@ -74,7 +76,13 @@ export const onAuthStateChangedListener = (
     callback(null);
     return () => {};
   }
-  return onAuthStateChanged(auth, callback);
+  try {
+    return onAuthStateChanged(auth, callback);
+  } catch (err) {
+    console.warn('Auth listener error:', err);
+    callback(null);
+    return () => {};
+  }
 };
 
 export { app, auth };

@@ -14,7 +14,6 @@ export default function CartDrawer() {
     updateQuantity,
     removeFromCart,
     subtotal,
-    currentUser,
   } = useCart();
 
   if (!isCartDrawerOpen) return null;
@@ -48,12 +47,7 @@ export default function CartDrawer() {
 
           {/* Cart List */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4">
-            {!currentUser ? (
-              <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
-                <ShoppingBag className="w-12 h-12 text-muted opacity-50" />
-                <p className="text-muted text-sm font-medium">Please sign in to view your cart items.</p>
-              </div>
-            ) : cartItems.length === 0 ? (
+            {cartItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-center gap-3">
                 <ShoppingBag className="w-12 h-12 text-muted opacity-50" />
                 <p className="text-foreground font-semibold">Your cart is empty</p>
@@ -132,7 +126,7 @@ export default function CartDrawer() {
           </div>
 
           {/* Subtotal & Checkout CTA */}
-          {currentUser && cartItems.length > 0 && (
+          {cartItems.length > 0 && (
             <div className="p-4 sm:p-6 border-t border-border bg-background flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted font-medium">Subtotal</span>
@@ -144,7 +138,7 @@ export default function CartDrawer() {
               <Link
                 href="/checkout"
                 onClick={() => setIsCartDrawerOpen(false)}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
+                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-primary text-primary-foreground font-semibold text-base shadow-lg hover:opacity-90 transition-opacity"
               >
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />

@@ -31,7 +31,7 @@ interface FormErrors {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cartItems, subtotal, currentUser } = useCart();
+  const { cartItems, subtotal, currentUser, effectiveUserId } = useCart();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -99,7 +99,7 @@ export default function CheckoutPage() {
     if (!isLoaded) {
       setPaymentStatusMessage({
         type: 'error',
-        text: 'Failed to load Razorpay payment gateway. Please check your network and try again.',
+        text: 'Failed to load Razorpay payment gateway. Please check your internet connection.',
       });
       setLoadingState('idle');
       return;
@@ -127,7 +127,7 @@ export default function CheckoutPage() {
       },
       prefill: {
         name: formData.name,
-        email: currentUser?.email || '',
+        email: currentUser?.email || 'customer@example.com',
         contact: formData.phone,
       },
       theme: {
@@ -208,13 +208,7 @@ export default function CheckoutPage() {
 
     if (!validateForm()) return;
 
-    if (!currentUser) {
-      setPaymentStatusMessage({
-        type: 'error',
-        text: 'Please sign in to complete your checkout.',
-      });
-      return;
-    }
+    const activeUserId = effectiveUserId || 'guest_user';
 
     if (cartItems.length === 0 && !createdOrderDetails) {
       setPaymentStatusMessage({
@@ -243,7 +237,7 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: currentUser.uid,
+          user_id: activeUserId,
           cart_items: cartItems,
           shipping_name: formData.name,
           shipping_address: formData.address,

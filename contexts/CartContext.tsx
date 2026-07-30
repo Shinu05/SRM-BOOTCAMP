@@ -32,6 +32,7 @@ interface CartContextType {
   subtotal: number;
   totalCount: number;
   currentUser: User | null;
+  effectiveUserId: string;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -39,8 +40,21 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [guestId, setGuestId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+
+  // Initialize or retrieve persistent guest user ID
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let storedGuestId = localStorage.getItem('srm_guest_user_id');
+      if (!storedGuestId) {
+        storedGuestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        localStorage.setItem('srm_guest_user_id', storedGuestId);
+      }
+      setGuestId(storedGuestId);
+    }
+  }, []);
 
   // Sync auth state
   useEffect(() => {
@@ -50,8 +64,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  // Fetch cart items for current user
+  const effectiveUserId = currentUser?.uid || guestId;
+
+  // Fetch cart items for effective user ID
   const fetchCartItems = useCallback(async (userId: string) => {
+    if (!userId) return;
     setIsLoading(true);
     try {
       const res = await fetch(`/api/cart?user_id=${encodeURIComponent(userId)}`);
@@ -67,33 +84,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (currentUser) {
-      fetchCartItems(currentUser.uid);
+    if (effectiveUserId) {
+      fetchCartItems(effectiveUserId);
     } else {
       setCartItems([]);
       setIsLoading(false);
     }
-  }, [currentUser, fetchCartItems]);
+  }, [effectiveUserId, fetchCartItems]);
 
   const addToCart = async (productId: string, quantity = 1): Promise<boolean> => {
-    if (!currentUser) {
-      alert('Please sign in to add items to your cart.');
-      return false;
-    }
+    const targetUserId = effectiveUserId || 'guest_default';
 
     try {
       const res = await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: currentUser.uid,
+          user_id: targetUserId,
           product_id: productId,
           quantity,
         }),
       });
 
       if (res.ok) {
-        await fetchCartItems(currentUser.uid);
+        await fetchCartItems(targetUserId);
         setIsCartDrawerOpen(true);
         return true;
       }
@@ -104,7 +118,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {
-    if (!currentUser) return;
+    if (!effectiveUserId) return;
 
     try {
       const res = await fetch('/api/cart', {
@@ -114,7 +128,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (res.ok) {
-        await fetchCartItems(currentUser.uid);
+        await fetchCartItems(effectiveUserId);
       }
     } catch (err) {
       console.error('Error updating quantity:', err);
@@ -122,7 +136,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = async (itemId: string) => {
-    if (!currentUser) return;
+    if (!effectiveUserId) return;
 
     try {
       const res = await fetch(`/api/cart?id=${encodeURIComponent(itemId)}`, {
@@ -130,7 +144,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (res.ok) {
-        await fetchCartItems(currentUser.uid);
+        await fetchCartItems(effectiveUserId);
       }
     } catch (err) {
       console.error('Error removing item from cart:', err);
@@ -161,6 +175,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         subtotal,
         totalCount,
         currentUser,
+        effectiveUserId,
       }}
     >
       {children}
