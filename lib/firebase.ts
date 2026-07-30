@@ -1,0 +1,2 @@
+// Firebase configuration placeholder
+export {};

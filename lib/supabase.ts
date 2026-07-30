@@ -1,0 +1,2 @@
+// Supabase configuration placeholder
+export {};
