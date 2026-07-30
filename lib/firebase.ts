@@ -6,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   User,
+  Auth,
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -17,12 +18,35 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase (singleton pattern for Next.js SSR)
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// Safely verify if Firebase credentials are populated
+const isConfigured = Boolean(
+  firebaseConfig.apiKey &&
+    firebaseConfig.apiKey.trim() !== '' &&
+    !firebaseConfig.apiKey.includes('YOUR_')
+);
+
+let app: any = null;
+let auth: Auth | null = null;
+
+if (isConfigured) {
+  try {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+  } catch (error) {
+    console.warn('Firebase initialization skipped or failed:', error);
+  }
+}
+
 const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async () => {
+  if (!auth) {
+    alert(
+      'Firebase Authentication is not configured yet.\nPlease set NEXT_PUBLIC_FIREBASE_API_KEY and credentials in .env.local'
+    );
+    throw new Error('Firebase Auth not configured');
+  }
+
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
@@ -33,6 +57,8 @@ export const signInWithGoogle = async () => {
 };
 
 export const signOutUser = async () => {
+  if (!auth) return;
+
   try {
     await signOut(auth);
   } catch (error) {
@@ -44,6 +70,10 @@ export const signOutUser = async () => {
 export const onAuthStateChangedListener = (
   callback: (user: User | null) => void
 ) => {
+  if (!auth) {
+    callback(null);
+    return () => {};
+  }
   return onAuthStateChanged(auth, callback);
 };
 
