@@ -37,23 +37,30 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+function getGuestUserId(): string {
+  if (typeof window === 'undefined') return 'guest_default';
+  try {
+    let id = localStorage.getItem('srm_guest_user_id');
+    if (!id) {
+      id = 'guest_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      localStorage.setItem('srm_guest_user_id', id);
+    }
+    return id;
+  } catch (e) {
+    return 'guest_default';
+  }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [guestId, setGuestId] = useState<string>('');
+  const [guestId, setGuestId] = useState<string>(getGuestUserId);
   const [isLoading, setIsLoading] = useState(true);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
-  // Initialize or retrieve persistent guest user ID
+  // Sync client guest ID
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      let storedGuestId = localStorage.getItem('srm_guest_user_id');
-      if (!storedGuestId) {
-        storedGuestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-        localStorage.setItem('srm_guest_user_id', storedGuestId);
-      }
-      setGuestId(storedGuestId);
-    }
+    setGuestId(getGuestUserId());
   }, []);
 
   // Sync auth state
@@ -64,7 +71,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const effectiveUserId = currentUser?.uid || guestId;
+  const effectiveUserId = currentUser?.uid || guestId || 'guest_default';
 
   // Fetch cart items for effective user ID
   const fetchCartItems = useCallback(async (userId: string) => {
@@ -86,14 +93,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (effectiveUserId) {
       fetchCartItems(effectiveUserId);
-    } else {
-      setCartItems([]);
-      setIsLoading(false);
     }
   }, [effectiveUserId, fetchCartItems]);
 
   const addToCart = async (productId: string, quantity = 1): Promise<boolean> => {
-    const targetUserId = effectiveUserId || 'guest_default';
+    const targetUserId = effectiveUserId;
 
     try {
       const res = await fetch('/api/cart', {

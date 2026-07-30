@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       }, 0);
 
     try {
-      // 1. Insert order
+      // 1. Insert order into Supabase
       const { data: newOrder, error: orderErr } = await supabase
         .from('orders')
         .insert([
@@ -125,14 +125,18 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (!orderErr && newOrder) {
-        // 2. Insert order items
+        // 2. Insert order items with valid UUIDs
         if (cart_items && cart_items.length > 0) {
-          const itemsToInsert = cart_items.map((item: any) => ({
-            order_id: newOrder.id,
-            product_id: item.product_id || item.products?.id,
-            quantity: item.quantity,
-            price: item.products?.price || item.price || 0,
-          }));
+          const itemsToInsert = cart_items.map((item: any) => {
+            let pid = item.products?.id || item.product_id;
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pid);
+            return {
+              order_id: newOrder.id,
+              product_id: isUuid ? pid : null,
+              quantity: item.quantity,
+              price: item.products?.price || item.price || 0,
+            };
+          });
 
           await supabase.from('order_items').insert(itemsToInsert);
         }
