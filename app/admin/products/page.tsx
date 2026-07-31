@@ -141,6 +141,21 @@ export default function AdminProductsPage() {
     }
   };
 
+  // Calculate KPIs
+  const totalProducts = products.length;
+  const lowStock = products.filter(p => p.stock < 10).length;
+  const uniqueCategories = new Set(products.map(p => p.category).filter(Boolean)).size;
+  const avgPrice = totalProducts > 0 
+    ? products.reduce((acc, p) => acc + Number(p.price), 0) / totalProducts 
+    : 0;
+
+  const kpis = [
+    { label: 'Total Products', value: String(totalProducts), accent: '#6366f1' },
+    { label: 'Low Stock Alerts', value: String(lowStock), accent: '#ef4444' },
+    { label: 'Categories', value: String(uniqueCategories), accent: '#8b5cf6' },
+    { label: 'Avg. Price', value: `$${avgPrice.toFixed(2)}`, accent: '#10b981' },
+  ];
+
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-5">
       {/* Header */}
@@ -160,9 +175,20 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {kpis.map((kpi) => (
+          <div key={kpi.label} className="bg-surface border border-border/50 shadow-sm rounded-xl p-4 flex flex-col gap-2 transition-shadow hover:shadow-md">
+            <span className="text-[11px] font-medium text-muted uppercase tracking-wider">{kpi.label}</span>
+            <span className="text-xl font-bold text-foreground">{kpi.value}</span>
+            <div className="h-0.5 w-8 rounded-full" style={{ backgroundColor: kpi.accent, opacity: 0.8 }} />
+          </div>
+        ))}
+      </div>
+
       {/* Add / Edit Form Modal */}
       {formOpen && (
-        <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-4">
+        <div className="bg-surface border border-border/50 shadow-sm rounded-xl p-5 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-foreground">
               {editingId ? 'Edit Product' : 'New Product'}
@@ -277,11 +303,11 @@ export default function AdminProductsPage() {
           <Loader2 className="w-5 h-5 animate-spin text-muted" />
         </div>
       ) : products.length === 0 ? (
-        <div className="bg-surface border border-border rounded-xl p-10 text-center">
+        <div className="bg-surface border border-border/50 shadow-sm rounded-xl p-10 text-center">
           <p className="text-sm text-muted">No products found. Add your first product above.</p>
         </div>
       ) : (
-        <div className="bg-surface border border-border rounded-xl overflow-hidden">
+        <div className="bg-surface border border-border/50 shadow-sm rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>

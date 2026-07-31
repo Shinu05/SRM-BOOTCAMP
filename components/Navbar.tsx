@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, Menu, X, Store, LogIn, LogOut, User as UserIcon, ChevronDown, Loader2, Settings } from 'lucide-react';
+import { ShoppingCart, Menu, X, Store, LogIn, LogOut, User as UserIcon, ChevronDown, Loader2, Settings, Package } from 'lucide-react';
 import { signInWithGoogle, signOutUser, onAuthStateChangedListener } from '@/lib/firebase';
 import { useCart } from '@/contexts/CartContext';
 import CartDrawer from '@/components/CartDrawer';
@@ -70,12 +70,9 @@ export default function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/"
-                className="flex items-center gap-2 font-bold text-lg text-foreground hover:text-accent transition-colors"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
-                <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-                  <Store className="w-5 h-5" />
-                </div>
-                <span className="tracking-tight">Store</span>
+                <Image src="/logo.jpg" alt="Atlas Logo" width={160} height={160} className="object-cover w-14 h-14 rounded-full shadow-sm" priority />
               </Link>
             </div>
 
@@ -157,6 +154,14 @@ export default function Navbar() {
                             {currentUser.email}
                           </p>
                         </div>
+                        <Link
+                          href="/orders"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-foreground hover:bg-secondary transition-colors"
+                        >
+                          <Package className="w-4 h-4" />
+                          <span>My Orders</span>
+                        </Link>
                         <button
                           onClick={handleSignOut}
                           className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-error hover:bg-secondary transition-colors"

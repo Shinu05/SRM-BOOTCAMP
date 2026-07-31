@@ -49,63 +49,63 @@ export default function ProductCard({
   };
 
   return (
-    <div className="group bg-surface border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col h-full">
-      {/* Product Image */}
-      <Link href={`/products/${slug}`} className="relative aspect-square w-full overflow-hidden bg-secondary block">
+    <div className="group relative flex flex-col h-[400px] sm:h-[480px] w-full bg-white rounded-[2.5rem] p-2 sm:p-3 shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+      {/* Inner Image Container */}
+      <div className="relative w-full h-full rounded-[2rem] overflow-hidden bg-zinc-900">
         {image ? (
           <Image
             src={image}
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+            className="object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted text-sm">
-            No Image Available
+          <div className="w-full h-full flex items-center justify-center text-white/50 text-sm font-medium">
+            No Image
           </div>
         )}
-      </Link>
 
-      {/* Product Content */}
-      <div className="p-4 flex flex-col flex-1 justify-between gap-4">
-        <div>
-          <Link href={`/products/${slug}`}>
-            <h3 className="text-base font-semibold text-foreground line-clamp-2 group-hover:text-accent transition-colors">
+        {/* Top Right Floating Add to Cart Button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={adding}
+          className="absolute top-4 right-4 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-white/40 hover:scale-105 transition-all z-10 disabled:opacity-50"
+          aria-label="Add to cart"
+        >
+          {added ? (
+            <Check className="w-5 h-5 text-green-400" />
+          ) : (
+            <ShoppingCart className="w-5 h-5" />
+          )}
+        </button>
+
+        {/* Bottom Dark Gradient Overlay */}
+        <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none" />
+
+        {/* Product Info - Pinned to bottom */}
+        <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6 flex flex-col justify-end">
+          <Link href={`/products/${slug}`} className="block mb-1">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-tight line-clamp-1 group-hover:text-white/90 transition-colors drop-shadow-md">
               {name}
             </h3>
           </Link>
-          <p className="mt-1 text-lg font-bold text-foreground">
-            {formattedPrice}
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={handleAddToCart}
-            disabled={adding}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-secondary text-secondary-foreground border border-border font-medium text-xs hover:bg-border transition-colors disabled:opacity-50"
-          >
-            {added ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-success" />
-                <span>Added</span>
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="w-3.5 h-3.5" />
-                <span>{adding ? 'Adding...' : 'Add to Cart'}</span>
-              </>
-            )}
-          </button>
+          
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+            <span className="text-white/70 text-sm font-medium">Premium</span>
+            <div className="flex items-center gap-2">
+              <span className="text-white/60 text-xs font-medium uppercase tracking-wider">From</span>
+              <p className="text-lg sm:text-xl font-bold text-white drop-shadow-md">
+                {formattedPrice}
+              </p>
+            </div>
+          </div>
 
           <Link
             href={`/products/${slug}`}
-            className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-xs hover:opacity-90 transition-opacity"
+            className="w-full flex items-center justify-center py-3.5 sm:py-4 rounded-full bg-white text-black font-semibold text-sm sm:text-base hover:bg-gray-50 active:scale-[0.98] transition-all shadow-lg"
           >
-            <span>View</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            View Product
           </Link>
         </div>
       </div>

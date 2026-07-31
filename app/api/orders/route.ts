@@ -22,7 +22,7 @@ interface OrderFallback {
   }>;
 }
 
-const fallbackOrderStore: OrderFallback[] = [];
+export const fallbackOrderStore: OrderFallback[] = [];
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (userId) {
+    let finalOrders: any[] = [];
     try {
       const { data: orders, error } = await supabase
         .from('orders')
@@ -59,12 +60,21 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: false });
 
       if (!error && orders) {
-        return NextResponse.json({ orders });
+        finalOrders = orders;
       }
     } catch (err) {}
 
     const userOrders = fallbackOrderStore.filter((o) => o.user_id === userId);
-    return NextResponse.json({ orders: userOrders });
+    
+    // Merge, avoiding duplicates by id
+    const mergedOrders = [...finalOrders];
+    userOrders.forEach(fbOrder => {
+      if (!mergedOrders.some(o => o.id === fbOrder.id)) {
+        mergedOrders.push(fbOrder);
+      }
+    });
+
+    return NextResponse.json({ orders: mergedOrders });
   }
 
   return NextResponse.json({ error: 'Missing id or user_id query parameter' }, { status: 400 });

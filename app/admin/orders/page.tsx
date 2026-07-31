@@ -129,11 +129,11 @@ export default function AdminOrdersPage() {
           <Loader2 className="w-5 h-5 animate-spin text-muted" />
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="bg-surface border border-border rounded-xl p-10 text-center">
+        <div className="bg-surface border border-border/50 shadow-sm rounded-xl p-10 text-center">
           <p className="text-sm text-muted">No orders found.</p>
         </div>
       ) : (
-        <div className="bg-surface border border-border rounded-xl overflow-hidden">
+        <div className="bg-surface border border-border/50 shadow-sm rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>

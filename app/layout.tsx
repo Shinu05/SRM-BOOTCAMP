@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Store",
-    default: "Store | Premium Everyday Essentials",
+    template: "%s | Atlas",
+    default: "Atlas | Explore. Shop. Elevate.",
   },
   description:
     "Explore our curated collection of high-quality products designed for performance, comfort, and modern elegance.",
@@ -24,16 +24,16 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Store | Premium Everyday Essentials",
+    title: "Atlas | Explore. Shop. Elevate.",
     description:
       "Explore our curated collection of high-quality products designed for performance, comfort, and modern elegance.",
-    siteName: "Store",
+    siteName: "Atlas",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Store | Premium Everyday Essentials",
+    title: "Atlas | Explore. Shop. Elevate.",
     description:
       "Explore our curated collection of high-quality products designed for performance, comfort, and modern elegance.",
   },

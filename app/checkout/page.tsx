@@ -403,7 +403,15 @@ export default function CheckoutPage() {
                     type="text"
                     disabled={Boolean(createdOrderDetails)}
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData({ ...formData, name: val });
+                      if (!val.trim()) setErrors({ ...errors, name: 'Full name is required' });
+                      else setErrors({ ...errors, name: undefined });
+                    }}
+                    onBlur={(e) => {
+                      if (!e.target.value.trim()) setErrors({ ...errors, name: 'Full name is required' });
+                    }}
                     placeholder="Jane Doe"
                     className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                       errors.name ? 'border-error' : 'border-border'
@@ -426,7 +434,15 @@ export default function CheckoutPage() {
                     type="text"
                     disabled={Boolean(createdOrderDetails)}
                     value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData({ ...formData, address: val });
+                      if (!val.trim()) setErrors({ ...errors, address: 'Shipping address is required' });
+                      else setErrors({ ...errors, address: undefined });
+                    }}
+                    onBlur={(e) => {
+                      if (!e.target.value.trim()) setErrors({ ...errors, address: 'Shipping address is required' });
+                    }}
                     placeholder="123 Commerce St, Suite 400"
                     className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                       errors.address ? 'border-error' : 'border-border'
@@ -450,7 +466,15 @@ export default function CheckoutPage() {
                       type="text"
                       disabled={Boolean(createdOrderDetails)}
                       value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, city: val });
+                        if (!val.trim()) setErrors({ ...errors, city: 'City is required' });
+                        else setErrors({ ...errors, city: undefined });
+                      }}
+                      onBlur={(e) => {
+                        if (!e.target.value.trim()) setErrors({ ...errors, city: 'City is required' });
+                      }}
                       placeholder="New York"
                       className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                         errors.city ? 'border-error' : 'border-border'
@@ -472,7 +496,15 @@ export default function CheckoutPage() {
                       type="text"
                       disabled={Boolean(createdOrderDetails)}
                       value={formData.postalCode}
-                      onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, postalCode: val });
+                        if (!val.trim()) setErrors({ ...errors, postalCode: 'Postal code is required' });
+                        else setErrors({ ...errors, postalCode: undefined });
+                      }}
+                      onBlur={(e) => {
+                        if (!e.target.value.trim()) setErrors({ ...errors, postalCode: 'Postal code is required' });
+                      }}
                       placeholder="10001"
                       className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                         errors.postalCode ? 'border-error' : 'border-border'
@@ -496,7 +528,15 @@ export default function CheckoutPage() {
                     type="tel"
                     disabled={Boolean(createdOrderDetails)}
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData({ ...formData, phone: val });
+                      if (!val.trim()) setErrors({ ...errors, phone: 'Phone number is required' });
+                      else setErrors({ ...errors, phone: undefined });
+                    }}
+                    onBlur={(e) => {
+                      if (!e.target.value.trim()) setErrors({ ...errors, phone: 'Phone number is required' });
+                    }}
                     placeholder="+1 (555) 000-0000"
                     className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
                       errors.phone ? 'border-error' : 'border-border'

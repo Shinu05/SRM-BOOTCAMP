@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { fallbackOrderStore } from '@/app/api/orders/route';
 
 export async function PATCH(
   request: NextRequest,
@@ -31,8 +32,15 @@ export async function PATCH(
       .select()
       .single();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error || !data) {
+      // Try fallback store
+      const index = fallbackOrderStore.findIndex(o => o.id === id);
+      if (index !== -1) {
+        fallbackOrderStore[index].status = status;
+        return NextResponse.json({ success: true, order: fallbackOrderStore[index] });
+      }
+
+      return NextResponse.json({ error: error?.message || 'Order not found' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, order: data });
