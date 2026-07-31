@@ -56,14 +56,40 @@ export default function CheckoutPage() {
     text: string;
   } | null>(null);
 
+  const validateField = (field: keyof FormErrors, value: string): string | undefined => {
+    if (!value.trim()) return 'This field is required';
+    switch (field) {
+      case 'name':
+        if (!/^[A-Za-z\s]+$/.test(value)) return 'Only alphabets are allowed';
+        break;
+      case 'address':
+        if (!/^[A-Za-z0-9\s]+$/.test(value)) return 'No special characters allowed';
+        break;
+      case 'city':
+        if (!/^[A-Za-z\s]+$/.test(value)) return 'Only alphabets are allowed';
+        break;
+      case 'postalCode':
+        if (!/^\d{1,6}$/.test(value)) return 'Must be numbers, max 6 digits';
+        break;
+      case 'phone':
+        if (!/^\d{10}$/.test(value)) return 'Must be exactly 10 digits';
+        break;
+    }
+    return undefined;
+  };
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-
-    if (!formData.name.trim()) newErrors.name = 'Full name is required';
-    if (!formData.address.trim()) newErrors.address = 'Shipping address is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    const nameErr = validateField('name', formData.name);
+    if (nameErr) newErrors.name = nameErr;
+    const addrErr = validateField('address', formData.address);
+    if (addrErr) newErrors.address = addrErr;
+    const cityErr = validateField('city', formData.city);
+    if (cityErr) newErrors.city = cityErr;
+    const zipErr = validateField('postalCode', formData.postalCode);
+    if (zipErr) newErrors.postalCode = zipErr;
+    const phoneErr = validateField('phone', formData.phone);
+    if (phoneErr) newErrors.phone = phoneErr;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -406,11 +432,10 @@ export default function CheckoutPage() {
                     onChange={(e) => {
                       const val = e.target.value;
                       setFormData({ ...formData, name: val });
-                      if (!val.trim()) setErrors({ ...errors, name: 'Full name is required' });
-                      else setErrors({ ...errors, name: undefined });
+                      setErrors({ ...errors, name: validateField('name', val) });
                     }}
                     onBlur={(e) => {
-                      if (!e.target.value.trim()) setErrors({ ...errors, name: 'Full name is required' });
+                      setErrors({ ...errors, name: validateField('name', e.target.value) });
                     }}
                     placeholder="Jane Doe"
                     className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
@@ -437,11 +462,10 @@ export default function CheckoutPage() {
                     onChange={(e) => {
                       const val = e.target.value;
                       setFormData({ ...formData, address: val });
-                      if (!val.trim()) setErrors({ ...errors, address: 'Shipping address is required' });
-                      else setErrors({ ...errors, address: undefined });
+                      setErrors({ ...errors, address: validateField('address', val) });
                     }}
                     onBlur={(e) => {
-                      if (!e.target.value.trim()) setErrors({ ...errors, address: 'Shipping address is required' });
+                      setErrors({ ...errors, address: validateField('address', e.target.value) });
                     }}
                     placeholder="123 Commerce St, Suite 400"
                     className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
@@ -469,11 +493,10 @@ export default function CheckoutPage() {
                       onChange={(e) => {
                         const val = e.target.value;
                         setFormData({ ...formData, city: val });
-                        if (!val.trim()) setErrors({ ...errors, city: 'City is required' });
-                        else setErrors({ ...errors, city: undefined });
+                        setErrors({ ...errors, city: validateField('city', val) });
                       }}
                       onBlur={(e) => {
-                        if (!e.target.value.trim()) setErrors({ ...errors, city: 'City is required' });
+                        setErrors({ ...errors, city: validateField('city', e.target.value) });
                       }}
                       placeholder="New York"
                       className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
@@ -499,11 +522,10 @@ export default function CheckoutPage() {
                       onChange={(e) => {
                         const val = e.target.value;
                         setFormData({ ...formData, postalCode: val });
-                        if (!val.trim()) setErrors({ ...errors, postalCode: 'Postal code is required' });
-                        else setErrors({ ...errors, postalCode: undefined });
+                        setErrors({ ...errors, postalCode: validateField('postalCode', val) });
                       }}
                       onBlur={(e) => {
-                        if (!e.target.value.trim()) setErrors({ ...errors, postalCode: 'Postal code is required' });
+                        setErrors({ ...errors, postalCode: validateField('postalCode', e.target.value) });
                       }}
                       placeholder="10001"
                       className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
@@ -531,11 +553,10 @@ export default function CheckoutPage() {
                     onChange={(e) => {
                       const val = e.target.value;
                       setFormData({ ...formData, phone: val });
-                      if (!val.trim()) setErrors({ ...errors, phone: 'Phone number is required' });
-                      else setErrors({ ...errors, phone: undefined });
+                      setErrors({ ...errors, phone: validateField('phone', val) });
                     }}
                     onBlur={(e) => {
-                      if (!e.target.value.trim()) setErrors({ ...errors, phone: 'Phone number is required' });
+                      setErrors({ ...errors, phone: validateField('phone', e.target.value) });
                     }}
                     placeholder="+1 (555) 000-0000"
                     className={`w-full px-4 py-3 rounded-lg bg-background border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary ${
