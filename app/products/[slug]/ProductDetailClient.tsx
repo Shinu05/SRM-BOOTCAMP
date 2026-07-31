@@ -13,10 +13,8 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
 
   const imageUrl = product.image || product.image_url || '';
-  const formattedPrice =
-    typeof product.price === 'number'
-      ? `$${product.price.toFixed(2)}`
-      : product.price;
+  const priceNum = typeof product.price === 'number' ? product.price : Number(product.price) || 0;
+  const formattedPrice = `₹${priceNum.toFixed(2)}`;
 
   const handleAddToCart = async () => {
     setAdding(true);

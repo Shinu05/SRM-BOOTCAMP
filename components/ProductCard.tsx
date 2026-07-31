@@ -27,10 +27,10 @@ export default function ProductCard({
 
   const formattedPrice =
     typeof price === 'number'
-      ? `$${price.toFixed(2)}`
-      : price.startsWith('$')
-      ? price
-      : `$${price}`;
+      ? `₹${price.toFixed(2)}`
+      : price.startsWith('$') || price.startsWith('₹')
+      ? price.replace('$', '₹')
+      : `₹${price}`;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();

@@ -162,19 +162,19 @@ export default function AdminDashboard() {
   // 7. Price Distribution
   const priceRangeData = (() => {
     const buckets: Record<string, number> = {
-      '$0-25': 0,
-      '$25-50': 0,
-      '$50-100': 0,
-      '$100-200': 0,
-      '$200+': 0,
+      '₹0-25': 0,
+      '₹25-50': 0,
+      '₹50-100': 0,
+      '₹100-200': 0,
+      '₹200+': 0,
     };
     products.forEach(p => {
       const price = Number(p.price || 0);
-      if (price < 25) buckets['$0-25']++;
-      else if (price < 50) buckets['$25-50']++;
-      else if (price < 100) buckets['$50-100']++;
-      else if (price < 200) buckets['$100-200']++;
-      else buckets['$200+']++;
+      if (price < 25) buckets['₹0-25']++;
+      else if (price < 50) buckets['₹25-50']++;
+      else if (price < 100) buckets['₹50-100']++;
+      else if (price < 200) buckets['₹100-200']++;
+      else buckets['₹200+']++;
     });
     return Object.entries(buckets).map(([name, count]) => ({ name, count })).filter(b => b.count > 0);
   })();
@@ -199,9 +199,9 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: 'Total Orders', value: String(totalOrders), accent: '#8b5cf6' },
-          { label: 'Revenue', value: `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, accent: '#10b981' },
+          { label: 'Revenue', value: `₹${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, accent: '#10b981' },
           { label: 'Products', value: String(products.length), accent: '#6366f1' },
-          { label: 'Avg. Order', value: `$${avgOrder}`, accent: '#f59e0b' },
+          { label: 'Avg. Order', value: `₹${avgOrder}`, accent: '#f59e0b' },
         ].map((kpi) => (
           <div key={kpi.label} className="bg-surface border border-border/50 shadow-sm rounded-xl p-4 flex flex-col gap-2 transition-shadow hover:shadow-md">
             <span className="text-[11px] font-medium text-muted uppercase tracking-wider">{kpi.label}</span>
@@ -295,7 +295,7 @@ export default function AdminDashboard() {
             <div className="bg-surface border border-border/50 shadow-sm rounded-xl p-4 flex flex-col gap-3">
               <div>
                 <h2 className="text-sm font-semibold text-foreground">Revenue by Status</h2>
-                <p className="text-[11px] text-muted">Dollar amount per status</p>
+                <p className="text-[11px] text-muted">Amount per status</p>
               </div>
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
@@ -315,7 +315,7 @@ export default function AdminDashboard() {
                   </Pie>
                   <Tooltip
                     contentStyle={tooltipStyle}
-                    formatter={(value: any) => [`$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Revenue']}
+                    formatter={(value: any) => [`₹${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Revenue']}
                   />
                   <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
                 </PieChart>

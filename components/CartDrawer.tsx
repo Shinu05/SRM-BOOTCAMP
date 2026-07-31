@@ -86,7 +86,7 @@ export default function CartDrawer() {
                         {product?.name || 'Product Item'}
                       </h4>
                       <p className="text-sm font-bold text-foreground mt-0.5">
-                        ${price.toFixed(2)}
+                        ₹{price.toFixed(2)}
                       </p>
 
                       {/* Quantity Controls */}
@@ -131,7 +131,7 @@ export default function CartDrawer() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted font-medium">Subtotal</span>
                 <span className="text-xl font-bold text-foreground">
-                  ${subtotal.toFixed(2)}
+                  ₹{subtotal.toFixed(2)}
                 </span>
               </div>
 

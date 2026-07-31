@@ -163,7 +163,7 @@ export default function AdminOrdersPage() {
                         </div>
                       </td>
                       <td className="px-4 py-2.5 text-foreground font-medium">
-                        ${Number(order.total_amount).toFixed(2)}
+                        ₹{Number(order.total_amount).toFixed(2)}
                       </td>
                       <td className="px-4 py-2.5">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${sc.bg} ${sc.color}`}>
