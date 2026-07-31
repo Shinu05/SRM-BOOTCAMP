@@ -85,8 +85,13 @@ export default function CartDrawer() {
                       <h4 className="text-sm font-semibold text-foreground truncate">
                         {product?.name || 'Product Item'}
                       </h4>
+<<<<<<< HEAD
                       <p className="text-sm font-bold text-foreground mt-0.5">
                         ₹{price.toFixed(2)}
+=======
+                      <p className="text-xs text-muted mt-1">
+                        Qty: {item.quantity} × ₹{price.toFixed(2)}
+>>>>>>> 5d07dab51f815a780615e0ec248eab78d4d5bde6
                       </p>
 
                       {/* Quantity Controls */}

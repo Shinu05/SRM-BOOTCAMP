@@ -88,7 +88,11 @@ export default async function OrderConfirmationPage({ params }: Props) {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted">Total Amount:</span>
+<<<<<<< HEAD
                   <span className="text-lg font-bold text-foreground">
+=======
+                  <span className="text-xl font-bold text-foreground">
+>>>>>>> 5d07dab51f815a780615e0ec248eab78d4d5bde6
                     ₹{Number(order.total_amount || 0).toFixed(2)}
                   </span>
                 </div>

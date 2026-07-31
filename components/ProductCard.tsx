@@ -28,7 +28,13 @@ export default function ProductCard({
   const formattedPrice =
     typeof price === 'number'
       ? `₹${price.toFixed(2)}`
+<<<<<<< HEAD
       : price.startsWith('$') || price.startsWith('₹')
+=======
+      : price.startsWith('₹')
+      ? price
+      : price.startsWith('$')
+>>>>>>> 5d07dab51f815a780615e0ec248eab78d4d5bde6
       ? price.replace('$', '₹')
       : `₹${price}`;
 

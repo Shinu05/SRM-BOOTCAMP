@@ -132,8 +132,13 @@ export default function MyOrdersPage() {
                       </p>
                     </div>
                     <div className="text-left sm:text-right">
+<<<<<<< HEAD
                       <p className="text-xl font-bold text-foreground">
                         ₹{(order.total_amount || 0).toFixed(2)}
+=======
+                      <p className="text-sm font-semibold text-foreground">
+                        Total: ₹{(order.total_amount || 0).toFixed(2)}
+>>>>>>> 5d07dab51f815a780615e0ec248eab78d4d5bde6
                       </p>
                       <p className="text-sm font-semibold capitalize text-primary mt-1">
                         {order.status || 'Pending'}
@@ -206,7 +211,13 @@ export default function MyOrdersPage() {
                               </p>
                               <div className="flex items-center gap-3 mt-1 text-xs text-muted font-medium">
                                 <span>Qty: {item.quantity}</span>
+<<<<<<< HEAD
                                 <span>₹{(item.price || 0).toFixed(2)}</span>
+=======
+                                <span className="font-semibold text-foreground">
+                                  ₹{(item.price || 0).toFixed(2)}
+                                </span>
+>>>>>>> 5d07dab51f815a780615e0ec248eab78d4d5bde6
                               </div>
                             </div>
                           </div>
