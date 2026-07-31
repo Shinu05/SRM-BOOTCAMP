@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, Menu, X, Store, LogIn, LogOut, User as UserIcon, ChevronDown, Loader2 } from 'lucide-react';
+import { ShoppingCart, Menu, X, Store, LogIn, LogOut, User as UserIcon, ChevronDown, Loader2, Settings } from 'lucide-react';
 import { signInWithGoogle, signOutUser, onAuthStateChangedListener } from '@/lib/firebase';
 import { useCart } from '@/contexts/CartContext';
 import CartDrawer from '@/components/CartDrawer';
 import { User } from 'firebase/auth';
+import { isAdmin } from '@/lib/isAdmin';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -92,6 +93,15 @@ export default function Navbar() {
               >
                 Products
               </Link>
+              {currentUser && isAdmin(currentUser.email) && (
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center gap-1.5 text-muted hover:text-accent transition-colors"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Admin</span>
+                </Link>
+              )}
             </nav>
 
             {/* Right Actions: Cart & Auth & Mobile Menu Toggle */}
@@ -210,6 +220,16 @@ export default function Navbar() {
               >
                 Products
               </Link>
+              {currentUser && isAdmin(currentUser.email) && (
+                <Link
+                  href="/admin"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-3 py-2 rounded-md text-sm font-medium text-muted hover:text-foreground hover:bg-secondary transition-colors flex items-center gap-2"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Admin</span>
+                </Link>
+              )}
             </div>
           )}
         </div>
