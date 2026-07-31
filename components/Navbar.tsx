@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, Menu, X, Store, LogIn, LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Menu, X, Store, LogIn, LogOut, User as UserIcon, ChevronDown, Loader2 } from 'lucide-react';
 import { signInWithGoogle, signOutUser, onAuthStateChangedListener } from '@/lib/firebase';
 import { useCart } from '@/contexts/CartContext';
 import CartDrawer from '@/components/CartDrawer';
@@ -14,6 +14,7 @@ export default function Navbar() {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { totalCount, setIsCartDrawerOpen } = useCart();
@@ -39,10 +40,14 @@ export default function Navbar() {
   }, []);
 
   const handleSignIn = async () => {
+    if (isSigningIn) return;
+    setIsSigningIn(true);
     try {
       await signInWithGoogle();
     } catch (error) {
       console.error('Google Sign-In Error:', error);
+    } finally {
+      setIsSigningIn(false);
     }
   };
 
@@ -155,11 +160,20 @@ export default function Navbar() {
                 ) : (
                   <button
                     onClick={handleSignIn}
-                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                    disabled={isSigningIn}
+                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
                   >
-                    <LogIn className="w-4 h-4" />
-                    <span className="hidden sm:inline">Sign in with Google</span>
-                    <span className="sm:hidden">Sign In</span>
+                    {isSigningIn ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <LogIn className="w-4 h-4" />
+                    )}
+                    <span className="hidden sm:inline">
+                      {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
+                    </span>
+                    <span className="sm:hidden">
+                      {isSigningIn ? 'Signing in...' : 'Sign In'}
+                    </span>
                   </button>
                 )
               )}
