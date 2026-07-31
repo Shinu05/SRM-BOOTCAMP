@@ -15,25 +15,26 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Atlas",
-    default: "Atlas | Explore. Shop. Elevate.",
+    template: "%s | ATLAS",
+    default: "ATLAS | Explore. Shop. Elevate.",
   },
   description:
     "Explore our curated collection of high-quality products designed for performance, comfort, and modern elegance.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/logo.jpg",
+    apple: "/logo.jpg",
   },
   openGraph: {
-    title: "Atlas | Explore. Shop. Elevate.",
+    title: "ATLAS | Explore. Shop. Elevate.",
     description:
       "Explore our curated collection of high-quality products designed for performance, comfort, and modern elegance.",
-    siteName: "Atlas",
+    siteName: "ATLAS",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Atlas | Explore. Shop. Elevate.",
+    title: "ATLAS | Explore. Shop. Elevate.",
     description:
       "Explore our curated collection of high-quality products designed for performance, comfort, and modern elegance.",
   },
